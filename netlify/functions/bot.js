@@ -32,11 +32,20 @@ exports.handler = async (event) => {
     ? verses[Math.floor(Math.random() * verses.length)]
     : "اكتب /quran للحصول على آية.";
 
-  await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`, {
+  if (!process.env.BOT_TOKEN) {
+    console.error("BOT_TOKEN is not set in Netlify environment variables");
+  }
+
+  const response = await fetch(`https://api.telegram.org/bot${process.env.BOT_TOKEN}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ chat_id: chatId, text: reply })
   });
+
+  if (!response.ok) {
+    // Telegram's error body does not contain the token, so it is safe to log
+    console.error("sendMessage failed:", response.status, await response.text());
+  }
 
   return { statusCode: 200, body: "ok" };
 };
